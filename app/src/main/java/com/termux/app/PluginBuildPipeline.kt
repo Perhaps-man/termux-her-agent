@@ -159,20 +159,15 @@ public class MainActivity extends Activity {
 
     suspend fun run(context: Context) = withContext(Dispatchers.IO) {
         Log.d(TAG, "开始构建插件...")
-        // 不依赖 herTerminalSession：execCommand 使用 HerExecSession（独立 bash 进程），
-        // 点击编译后立即启动的 Service 在异步 ensureEmbeddedTerminal 完成前常拿不到 session，导致误报「终端未就绪」。
-        // 直接执行流水线；若 bash 未就绪，execCommand 会抛错并由上层处理。
 
         val buildRoot = File(context.filesDir, "plugin_build").apply { mkdirs() }
         val srcDir = File(buildRoot, "src").apply { mkdirs() }
         val classDir = File(buildRoot, "classes").apply { mkdirs() }
         val outDir = File(buildRoot, "out").apply { mkdirs() }
-// ==== 每次构建必须清理，避免残留 class 导致 d8 一直炸 ====
         srcDir.deleteRecursively(); srcDir.mkdirs()
         classDir.deleteRecursively(); classDir.mkdirs()
         outDir.deleteRecursively(); outDir.mkdirs()
 
-// 清掉上一次产物
         File(buildRoot, "tmp.jar").delete()
         File(outDir, "classes.dex").delete()
         var pkgName = TEMPLATE_PKG

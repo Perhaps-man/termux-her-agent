@@ -167,27 +167,10 @@ private suspend fun callClaude(apiKey: String, model: String, prompt: String): S
     }
 }
 
-// ── Agent 专用 AI 调用 ────────────────────────────────────────────────────────────
-
-/** Agent 执行时的采样温度：低温度保证 JSON 格式输出稳定 */
 private const val AGENT_TEMPERATURE = 0.15
 
-/**
- * Claude 必填字段的 max_tokens 上限。
- * 设为 16384 而非更小的值，避免 writeFile 写大型 HTML/JS/CSS 时内容被截断。
- * OpenAI / Gemini 不发送此字段，由各自 API 使用模型默认上限。
- */
 private const val CLAUDE_AGENT_MAX_TOKENS = 16384
 
-/**
- * Agent 专用 AI 调用：system/user 消息分离 + 低温度 + 指数退避重试
- *
- * 与 [callAI] 的关键区别：
- * - systemPrompt 承载工具格式说明（ACTION_TOOLS_PROMPT），模型作为角色指令处理
- * - userPrompt   承载任务内容、历史、记忆，模型作为用户输入处理
- * - temperature=0.15 确保 JSON 输出格式稳定，减少解析失败率
- * - 网络/API 错误自动重试最多 [maxRetries] 次，每次等待时间翻倍
- */
 suspend fun callAIAgent(
     context: Context,
     systemPrompt: String,
@@ -201,7 +184,7 @@ suspend fun callAIAgent(
 
     var lastError = "未知错误"
     for (attempt in 0 until maxRetries) {
-        if (attempt > 0) delay(1000L shl attempt)   // 1s → 2s → 4s
+        if (attempt > 0) delay(1000L shl attempt)
         val result = runCatching {
             when (provider) {
                 PROVIDER_CLAUDE   -> callClaudeAgent(apiKey, model, systemPrompt, userPrompt)
@@ -229,8 +212,6 @@ private suspend fun callOpenAICompatibleAgent(
         .put("model", model)
         .put("messages", messages)
         .put("temperature", AGENT_TEMPERATURE)
-        // 不设 max_tokens：让各 OpenAI-compatible API 使用模型自身上限
-        // 避免 writeFile 写大型 HTML/JS 时输出被截断
     val request = Request.Builder()
         .url("$baseUrl/chat/completions")
         .addHeader("Authorization", "Bearer $apiKey")
@@ -257,7 +238,6 @@ private suspend fun callGeminiAgent(
             JSONArray().put(JSONObject().put("text", userPrompt)))))
         put("generationConfig", JSONObject()
             .put("temperature", AGENT_TEMPERATURE))
-            // 不设 maxOutputTokens，使用 Gemini 模型默认上限
     }
     val request = Request.Builder()
         .url("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey")
@@ -280,8 +260,8 @@ private suspend fun callClaudeAgent(
 ): String = withContext(Dispatchers.IO) {
     val body = JSONObject().apply {
         put("model", model)
-        put("max_tokens", CLAUDE_AGENT_MAX_TOKENS)  // Claude 必填；设大值允许输出完整 HTML/JS
-        put("system", systemPrompt)   // Claude 用顶层 system 字段，不放进 messages
+        put("max_tokens", CLAUDE_AGENT_MAX_TOKENS)
+        put("system", systemPrompt)
         put("messages", JSONArray().put(JSONObject()
             .put("role", "user").put("content", userPrompt)))
     }
@@ -299,17 +279,11 @@ private suspend fun callClaudeAgent(
     }
 }
 
-// ── Embedding ────────────────────────────────────────────────────────────────
-
-/**
- * 调用 Dashscope text-embedding-v4 获取向量。
- * 失败时返回 null（降级为 token 匹配），不抛异常。
- */
 suspend fun callEmbedding(apiKey: String, text: String): List<Float>? = withContext(Dispatchers.IO) {
     if (apiKey.isBlank() || text.isBlank()) return@withContext null
     val body = JSONObject()
         .put("model", "text-embedding-v4")
-        .put("input", text.take(2000))   // API 单次输入上限
+        .put("input", text.take(2000))
         .put("encoding_format", "float")
     val request = Request.Builder()
         .url("https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings")

@@ -246,7 +246,6 @@ fun incrementUserMessageCountAndCheckTrigger(context: Context): Boolean {
     return count > 0 && count % freq == 0
 }
 
-/** 供 AI 生成 Activity 时作为历史上下文：自动编译设置与触发信息 */
 fun getAutoBuildHistoryForPrompt(context: Context): String {
     val freq = getAutoBuildFreq(context)
     val count = getUserMessageCount(context)
@@ -266,10 +265,6 @@ fun formatSessionTime(ms: Long): String {
     }
 }
 
-/**
- * 读取当前会话中用户最近若干条消息，格式化为供 Activity 生成的 AI 提示词片段。
- * @param maxCount 最多返回条数，默认 10
- */
 fun getLastUserMessagesForPrompt(context: Context, maxCount: Int = 10): String {
     val sessionId = getCurrentSessionId(context)
     val items = loadSessionChat(context, sessionId) ?: return ""

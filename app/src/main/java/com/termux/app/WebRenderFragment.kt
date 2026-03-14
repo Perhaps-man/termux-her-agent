@@ -22,7 +22,6 @@ import java.util.zip.ZipInputStream
 object WebRenderManager {
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
-    /** loadHtml 鏃跺洖璋冿紝鐢?IDE 鍦ㄨ亰澶╁垪琛ㄤ腑鍔犲叆缃戦〉棰勮姘旀场 */
     var onLoadHtml: ((String) -> Unit)? = null
 
     fun loadHtml(html: String) {
@@ -38,35 +37,18 @@ fun sha256(s: String): String {
 
 
 
-// 预编译高频调用路径上的 Regex，避免每次调用重新编译
 private val RE_JSON_ARRAY = Regex("""\[[\s\S]*\]""")
 private val RE_ASK_USER = Regex("""askUser\s*\(\s*"((?:[^"\\]|\\.)*)"\s*\)""")
 private val RE_WAIT = Regex("""wait\s*\(\s*([0-9]+)\s*\)""")
 
-/** 返回最近一次 execCommand 输出的末尾 N 行，直接来自 Process 输出流，无 transcript 限制 */
-/**
- * 清洗终端输出：去除 ANSI 转义序列、处理 \r 进度条覆写，让 AI 看到纯文本。
- * 此前是 text.trim() 的空实现，ANSI 控制码会直接污染 AI 上下文。
- */
 fun filterTerminalOutput(text: String): String {
-    // 1. Strip ANSI/VT escape sequences: ESC [ ... m / ESC [ ... A-Z etc.
     var r = text.replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "")
-    // 2. Strip OSC sequences: ESC ] ... BEL  or  ESC ] ... ESC \
     r = r.replace(Regex("\u001B][^\u0007\u001B]*(\u0007|\u001B\\\\)"), "")
-    // 3. Handle carriage-return overwrite (progress bars like wget/pip):
-    //    split each line by \r, keep only the last segment (the final overwrite)
     r = r.lines().joinToString("\n") { line -> line.split('\r').last() }
-    // 4. Remove remaining non-printable control chars (except \n and \t)
     r = r.replace(Regex("[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]"), "")
     return r.trim()
 }
 
-/**
- * 返回最近一次 exec 输出供 AI 查看：
- * - 先经过 filterTerminalOutput 清洗掉 ANSI 码
- * - 采用 head+tail 策略：展示前 8 行 + 末尾 (maxLines-8) 行，避免丢失编译错误开头
- * - 总长度上限 3000 字符
- */
 fun getLastTerminalLinesStr(maxLines: Int = 80): String {
     val cleaned = filterTerminalOutput(herLastExecOutput)
     val allLines = cleaned.lines().filter { it.isNotBlank() }
@@ -82,35 +64,25 @@ fun getLastTerminalLinesStr(maxLines: Int = 80): String {
         .take(3000)
 }
 
-/** runJava 编译出的 Activity 启动信息（由对话 UI 决定何时点击跳转） */
 data class PluginLaunchInfo(
     val dexPath: String,
     val entryActivity: String,
     val pkgName: String
 )
 
-/** showResultOnBubble=false 鏃朵笉鍦?AI 姘旀场涓嬫樉绀虹伆鑹茬粨鏋滐紙濡?askForHelp 鍚庣敤鎴峰洖澶嶅凡鍗曠嫭鎴愭场锛?*/
 data class RunResult(
     val result: String,
     val terminalLog: String,
     val showResultOnBubble: Boolean = true,
     val isSuccess: Boolean = true,
-    /** 非空时表示应插入「安装提醒」卡片，点击跳转依赖商店；包名列表可传给商店预填 */
     val depStorePackages: List<String>? = null,
-    /** 非空时表示应插入「运行 Activity」卡片，点击后通过 hook 启动 runJava 生成的界面 */
     val pluginLaunchInfo: PluginLaunchInfo? = null
 )
 
-/** 渚涙墽琛?askForHelp 鏃舵寕璧峰苟绛夊緟鐢ㄦ埛杈撳叆锛岀敱 Activity 瀹炵幇 */
 interface AskForHelpReplyReceiver {
     suspend fun waitForUserReply(): String
 }
 
-/**
- * 动作模式说明：
- * - 每一轮你只能输出一个「数组字面量」，不能有额外文字或 Markdown。
- * - 统一格式：["下一步要做什么的简要中文描述", 动作表达式，例如 exec('default', 'pwd')]。
- */
 val ACTION_TOOLS_PROMPT = """
 你是一个AI助手。正在安卓 Termux 环境的终端上执行任务。你必须严格按以下“动作模式”工作：
 1. 【唯一允许的输出格式】：
@@ -191,8 +163,6 @@ private val PROMPT_DEPS = listOf(
     PromptDep("which", "which", "bin/which"),
     PromptDep("wget", "wget", "bin/wget"),
     PromptDep("Git", "git", "bin/git"),
-    // Termux 仓库目前只提供滚动的 python 包（对应当前稳定的 Python 3.x）
-    // 不能精确锁到 3.11，因此这里仍使用官方的 python 包名
     PromptDep("Python 3", "python", "bin/python"),
     PromptDep("Clang / C++", "clang", "bin/clang"),
     PromptDep("Node.js LTS", "nodejs-lts", "bin/node")
@@ -242,12 +212,10 @@ fun buildActionToolsPrompt(ctx: Context): String {
 
 
 data class ParsedStep(val description: String, val actionLine: String, val directContent: String?) {
-    /** 鏈疆缁撴潫骞跺悜鐢ㄦ埛鍙戦€佷竴鏉?message锛堜笉鍐嶇户缁墽琛屽伐鍏凤級 */
     val isMessage: Boolean get() = actionLine == "message"
 }
 
 fun parseStepReply(reply: String): ParsedStep? {
-    // 剥离 markdown 代码围栏：模型有时把数组包在 ```json ... ``` 里
     var t = reply.trim()
     t = Regex("""```(?:json|JSON)?\s*""").replace(t, "").replace("```", "").trim()
     val arrMatch = RE_JSON_ARRAY.find(t) ?: return null
@@ -263,7 +231,6 @@ fun parseStepReply(reply: String): ParsedStep? {
         val firstPart = parts[0].trim()
         val secondPart = parts[1].trim()
 
-        // 解析描述字符串
         val desc = run {
             if (firstPart.length < 2) "执行中…"
             else {
@@ -278,21 +245,18 @@ fun parseStepReply(reply: String): ParsedStep? {
         }
         val secondRaw = secondPart.trim()
 
-        // runJava("...")：用 extractRunJavaCode 正确提取含内部引号的源码，避免被截断
         if (secondRaw.startsWith("runJava(")) {
             val code = extractRunJavaCode(secondRaw) ?: ""
             val content = code.ifBlank { null }
             return ParsedStep(description = desc, actionLine = "runJava", directContent = content)
         }
 
-        // message({...})：括号内是完整 JSON 对象，不能用 extractStringArg（会截断）
         if (secondRaw.startsWith("message(")) {
             val json = extractParenContent(secondRaw, "message(") ?: ""
             val content = json.ifBlank { null }
             return ParsedStep(description = desc, actionLine = "message", directContent = content)
         }
 
-        // 其它动作（exec / termuxAPI / search / wait 等）直接作为 actionLine
         ParsedStep(description = desc, actionLine = secondRaw, directContent = null)
     } catch (_: Throwable) {
         null
@@ -778,7 +742,6 @@ suspend fun executeParsedStep(context: Context, step: ParsedStep): RunResult = w
         return@withContext RunResult(msg, "")
     }
 
-    // 特例：runJava 使用 Activity 编译流水线，返回带插件启动信息的 RunResult，供对话页插入卡片
     if (step.directContent != null && step.actionLine == "runJava") {
         return@withContext try {
             val build = api.buildActivityFromJava(step.directContent)
@@ -804,9 +767,6 @@ suspend fun executeParsedStep(context: Context, step: ParsedStep): RunResult = w
     executeActionLines(context, listOf(step.actionLine))
 }
 
-/**
- * 鎵ц鍔ㄤ綔锛? * - exec("sessionId", "鍛戒护")锛氬湪鎸囧畾浼氳瘽鎵ц shell 鍛戒护锛屼笉鎷︽埅 termux-*锛? * - termuxAPI("鍛戒护")锛氱洿鎺ヨ皟鐢ㄥ師鐢?Termux API锛屽 termuxAPI("termux-battery-status")锛? * - search("鏌ヨ璇?)锛氱濉?AI 鎼滅储锛? * - runJava("...")锛氳繍琛?Java 浠ｇ爜锛? * - askUser("...")锛氱瓑寰呯敤鎴峰洖澶嶏紱
- * - wait(绉掓暟)锛氭寕璧蜂竴娈垫椂闂村悗缁х画锛? * - 鍏跺畠琛岃涓烘櫘閫氱粓绔懡浠わ紙鍏煎鏃ф牸寮忥級銆? */
 suspend fun executeActionLines(context: Context, lines: List<String>): RunResult = withContext(Dispatchers.IO) {
     val api = HerApi(context)
     val askForHelpReceiver = context as? AskForHelpReplyReceiver
@@ -821,7 +781,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
         val line = raw.trim()
         if (line.isEmpty()) continue
 
-        // 每条动作行开始时重置本地状态，防止上一次 runJava 的插件信息泄漏到其它步骤
         pluginLaunchInfo = null
 
         try {
@@ -836,7 +795,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                 }
 
                 line.startsWith("wait(") -> {
-                    // wait(秒数) —— 简单延时，不走终端
                     val m = RE_WAIT.find(line)
                     val seconds = m?.groupValues?.getOrNull(1)?.toLongOrNull()
                     if (seconds == null) {
@@ -848,7 +806,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                 }
 
                 line.startsWith("termuxAPI(") -> {
-                    // 鎻愮ず璇嶇害瀹氭牸寮忥細termuxAPI("termux-battery-status") 绛夛紝鐩存帴璋冪敤鍘熺敓瀹炵幇
                     val cmd = extractStringArg(line)?.trim()
                     if (cmd.isNullOrBlank()) {
                         results.add("termuxAPI 调用格式错误: $line")
@@ -873,7 +830,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                             val file = resolveWriteFilePath(context, pathRaw)
                             file.parentFile?.mkdirs()
                             file.writeText(content, Charsets.UTF_8)
-                            // 执行成功时，返回“写入成功: 绝对路径”，方便人和后续步骤查看
                             results.add("写入成功: ${file.absolutePath}")
                         } catch (e: Throwable) {
                             results.add("writeFile 失败: ${e.message}")
@@ -882,7 +838,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                 }
 
                 line.startsWith("editFile(") -> {
-                    // editFile("path", "old_str", "new_str") — 精确替换，不重写整个文件
                     val triple = parseThreeStringArgs(line)
                     if (triple == null) {
                         anyFailure = true
@@ -912,7 +867,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                 }
 
                 line.startsWith("appendFile(") -> {
-                    // appendFile("path", "content") — 追加到文件末尾
                     val args = parseTwoStringArgs(line)
                     if (args == null) {
                         anyFailure = true
@@ -932,7 +886,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                 }
 
                 line.startsWith("exec(") -> {
-                    // exec("sessionId", "command") — 在指定会话的 bash 进程中执行命令
                     var sessionId: String
                     var cmd: String
                     val parsed = parseExecArgs(line)
@@ -940,7 +893,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                         sessionId = parsed.first
                         cmd = parsed.second
                     } else {
-                        // 鍏煎鏃ф牸寮忥細exec("command")
                         val single = extractStringArg(line)
                         if (single.isNullOrBlank()) {
                             results.add("exec 调用格式错误: $line")
@@ -950,7 +902,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                         cmd = single
                     }
 
-                    // 先插入占位条目，执行过程中实时更新
                     val liveIndex = execLogEntries.size
                     val liveStartMs = System.currentTimeMillis()
                     execLogEntries.add(ExecLogEntry(cmd = cmd, output = "执行中…", isSuccess = false, exitCode = -1, timeMs = liveStartMs))
@@ -973,12 +924,9 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                     } catch (e: Throwable) {
                         execError = e
                     }
-                    // 获取清洗后的输出（head+tail，最多 3000 字符）
                     val tail = getLastTerminalLinesStr()
-                    // 获取执行后的工作目录，注入到返回结果中让 AI 感知 CWD 变化
                     val cwd = herExecSessions[sessionId]?.cwd ?: ""
                     val cwdNote = if (cwd.isNotBlank()) "\n[CWD] $cwd" else ""
-                    // 最终更新日志条目
                     val logOutput = buildString {
                         if (tail.isNotBlank()) append(tail)
                         if (execError != null) append(execError.message ?: "执行异常")
@@ -999,8 +947,6 @@ suspend fun executeActionLines(context: Context, lines: List<String>): RunResult
                         terminalLogs.add("error: ${execError.message}\n$tail$cwdNote")
                     } else {
                         if (exitCode != 0) anyFailure = true
-                        // results 放简洁的 exit 信号，terminalLogs 放完整输出
-                        // 两者都会进入 resultStr，AI 能同时看到状态码和终端内容
                         results.add(if (exitCode == 0) "[exit=0 OK]" else "[exit=$exitCode FAIL]")
                         terminalLogs.add(
                             if (tail.isNotBlank()) "$ $cmd\n$tail$cwdNote"
@@ -1152,7 +1098,6 @@ private fun extractParenContent(call: String, funcName: String): String? {
     return null
 }
 
-/** 对字符串字面量内容做简单反转义，仅用于 exec/runJava 里的代码字符串，不用于 message 的 JSON。 */
 private fun unescapeStringLiteral(raw: String): String =
     raw
         .replace("\\\"", "\"")
@@ -1160,14 +1105,6 @@ private fun unescapeStringLiteral(raw: String): String =
         .replace("\\n", "\n")
         .replace("\\t", "\t")
 
-/**
- * 从 runJava("...") 或 runJava('...') 中提取完整源码。
- *
- * 关键点：
- * - 只负责「找到成对的外层引号」，不再对内容做转义还原（保持与调用方写入的完全一致）。
- * - 对于内部的反斜杠，仅用于跳过后一个字符以避免错误识别结束引号，但会把 `\` 和后一个字符
- *   原样写回结果，避免破坏 Java 源码里的字符串字面量（例如 "C:\\temp"、"\"quoted\"" 等）。
- */
 private fun extractRunJavaCode(call: String): String? {
     val prefix = "runJava("
     val startIdx = call.indexOf(prefix)
@@ -1183,7 +1120,6 @@ private fun extractRunJavaCode(call: String): String? {
         val c = call[i]
         when {
             c == '\\' -> {
-                // 保留反斜杠本身，并把后一个字符原样写入，防止破坏 Java 源码中的转义序列
                 if (i + 1 < call.length) {
                     sb.append('\\')
                     sb.append(call[i + 1])
@@ -1200,9 +1136,7 @@ private fun extractRunJavaCode(call: String): String? {
     return null
 }
 
-/** 从形如 func("...") 的调用中提取单个字符串参数，返回反转义后的内容。 */
 private fun extractStringArg(call: String): String? {
-    // 同时支持双引号与单引号：exec("pwd") 或 exec('pwd')
     val firstDouble = call.indexOf('"')
     val firstSingle = call.indexOf('\'')
     val firstQuote = listOf(firstDouble, firstSingle).filter { it >= 0 }.minOrNull() ?: return null
@@ -1213,15 +1147,12 @@ private fun extractStringArg(call: String): String? {
     return unescapeStringLiteral(raw)
 }
 
-/** 解析形如 func("a", "b") 的两个字符串参数，返回 pair(a,b)，失败返回 null。 */
 private fun parseTwoStringArgs(call: String): Pair<String, String>? {
     val text = call.trim()
-    // 形如：exec( "id" , "cmd" )
     val openParen = text.indexOf('(')
     val closeParen = text.lastIndexOf(')')
     if (openParen < 0 || closeParen <= openParen) return null
     val inside = text.substring(openParen + 1, closeParen)
-    // 按第一个逗号分成两部分，允许逗号两侧有空格
     val commaIndex = inside.indexOf(',')
     if (commaIndex <= 0) return null
     val firstPart = inside.substring(0, commaIndex).trim()
@@ -1241,10 +1172,6 @@ private fun parseTwoStringArgs(call: String): Pair<String, String>? {
     return sessionId to second
 }
 
-/**
- * 在括号内容中按"未被引号包裹的逗号"分割，正确处理转义字符，
- * 用于解析 editFile("path", "old", "new") 等三参数工具调用。
- */
 private fun splitUnquotedCommas(inside: String): List<String> {
     val parts = mutableListOf<String>()
     var i = 0
@@ -1254,7 +1181,7 @@ private fun splitUnquotedCommas(inside: String): List<String> {
         val c = inside[i]
         when {
             inQuote == null && (c == '"' || c == '\'') -> inQuote = c
-            inQuote != null && c == '\\' -> i++  // skip escaped char
+            inQuote != null && c == '\\' -> i++
             inQuote != null && c == inQuote -> inQuote = null
             inQuote == null && c == ',' -> {
                 parts.add(inside.substring(start, i).trim())
@@ -1267,7 +1194,6 @@ private fun splitUnquotedCommas(inside: String): List<String> {
     return parts
 }
 
-/** 解析形如 func("a", "b", "c") 的三个字符串参数，失败返回 null。 */
 private fun parseThreeStringArgs(call: String): Triple<String, String, String>? {
     val text = call.trim()
     val openParen = text.indexOf('(')
@@ -1332,4 +1258,3 @@ private fun resolveWriteFilePath(context: Context, raw: String): File {
             File("/data/data/com.termux/files/home", raw)
     }
 }
-
