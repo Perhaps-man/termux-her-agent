@@ -154,24 +154,6 @@
 - 仓库包含开发调试签名文件，不适合直接用于正式发布
 - 动态代码生成、设备能力调用和命令执行本身都属于高风险行为
 
-## 给开发者
-
-如果你是来读代码的，重点从这些文件开始：
-
-- [`app/src/main/java/com/termux/app/IDE.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/IDE.kt)
-- [`app/src/main/java/com/termux/app/EnhancedAgentHelper.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/EnhancedAgentHelper.kt)
-- [`app/src/main/java/com/termux/app/WebRenderFragment.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/WebRenderFragment.kt)
-- [`app/src/main/java/com/termux/app/TermuxApiRunner.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/TermuxApiRunner.kt)
-- [`app/src/main/java/com/termux/app/PluginBuildPipeline.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/PluginBuildPipeline.kt)
-- [`app/src/main/java/com/termux/app/MemoryManager.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/MemoryManager.kt)
-
-补充文档：
-
-- [`QUICK_START.md`](/Users/xzs/Downloads/termux-app-0.118/QUICK_START.md)
-- [`MEMORY_SYSTEM_SUMMARY.md`](/Users/xzs/Downloads/termux-app-0.118/MEMORY_SYSTEM_SUMMARY.md)
-- [`MEMORY_SYSTEM_INTEGRATION.md`](/Users/xzs/Downloads/termux-app-0.118/MEMORY_SYSTEM_INTEGRATION.md)
-- [`PLUGIN_BUILD_SUPPORT.md`](/Users/xzs/Downloads/termux-app-0.118/PLUGIN_BUILD_SUPPORT.md)
-
 ## License
 
 请以仓库内现有许可证文件为准，并自行确认新增代码与依赖的许可证兼容性。
