@@ -1,123 +1,101 @@
-# Her / AIBox for Termux
+# Her / AIBox
 
-一个基于 `termux-app` 深度改造的 Android 项目：它保留了 Termux 的终端与会话能力，同时把 AI 对话执行器、动态插件、依赖商店、网页渲染、设备能力调用和分层记忆系统整合进了同一个 App。
+一个基于 Termux 深度改造的 Android AI 助手应用。
 
-这不是官方 Termux 仓库，而是一个面向“手机端 Agent / AI 助手”场景的 Fork。
+它把终端、AI 对话、任务执行、依赖安装、网页预览、设备能力调用和简单插件运行整合进了一个 App，目标不是做“另一个聊天框”，而是让手机上的 AI 能真正执行任务。
 
-## 项目定位
+这不是官方 Termux 仓库，而是一个面向“手机端 Agent / AI 助手”场景的实验性 Fork。
 
-这个项目试图把手机上的 Termux 从“终端模拟器”扩展成“可执行任务的 AI 容器”：
+## 它能做什么
 
-- 保留原始 Termux 的终端会话、多 session、bootstrap 安装与命令执行能力。
-- 新增聊天式入口 `SimpleExecutorActivity`，让模型通过结构化动作调用本地工具。
-- 把 `termux-api` 的大量能力直接内嵌到 App 进程里，减少外部依赖。
-- 支持动态生成并加载 Android 插件 Activity，让 AI 产出的 Java 代码可以被编译并运行。
-- 为长任务加入任务状态、检查点、记忆检索、历史压缩等 Agent 能力。
+- 用自然语言让 AI 帮你执行终端任务
+- 在任务过程中自动安装缺失依赖
+- 调用设备能力，如剪贴板、位置、Wi‑Fi、电池信息等
+- 在聊天里直接展示 HTML 页面和任务结果
+- 保存多会话历史，并为复杂任务保留上下文和记忆
+- 在部分场景下动态生成并运行简单 Android 插件页面
 
-## 核心能力
+## 适合谁
 
-### 1. AI 对话执行器
+- 想把 Termux 当成 AI 执行环境来玩的用户
+- 想在 Android 上体验“会执行命令的 Agent”而不是纯问答模型的用户
+- 对移动端自动化、终端、AI 工具调用感兴趣的开发者
 
-主入口是启动页 `LaunchActivity`，随后进入聊天执行器 `SimpleExecutorActivity`（定义在 [`app/src/main/java/com/termux/app/IDE.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/IDE.kt)）。
+## 不适合谁
 
-执行链路大致是：
+- 想找官方原版 Termux 的用户
+- 只想安装后零配置即用的普通消费者
+- 对高权限应用比较敏感、不能接受实验性行为的用户
 
-1. 用户输入自然语言任务。
-2. `EnhancedAgentHelper` 结合会话历史、记忆、失败记录构建 prompt。
-3. `callAIAgent()` 调用外部大模型。
-4. 模型只允许返回形如 `["步骤描述", 动作表达式]` 的结构化动作。
-5. `executeParsedStep()` 执行动作，例如：
-   - `exec(...)`：在 Termux bash 中执行命令
-   - `termux-*`：调用设备能力
-   - `runJava(...)`：编译并运行 Java 插件
-   - `message(...)`：向用户输出最终结果
+## 核心体验
 
-这套机制本质上是一个移动端 ReAct Agent。
+### 1. 启动即进入 AI + Termux 场景
 
-### 2. 持久命令执行环境
+应用启动后会先做基础权限申请和 Termux 环境初始化；如果已经存在动态插件，也会优先进入插件页面。
 
-[`IDE.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/IDE.kt) 中实现了 `HerExecSession`：
+### 2. 聊天不只是聊天
 
-- 基于持久 bash 进程而不是一次性 shell。
-- 自动给 `apt/pkg/pip/npm/conda` 等命令补充非交互参数。
-- 用 sentinel 标记抓取退出码和当前目录。
-- 支持多会话池，减少复杂任务中的上下文丢失。
+主界面是一个对话式执行器。你输入一句任务描述，AI 会把它拆成步骤，然后逐步执行，比如：
 
-这比“每步新开 shell”的 Agent 更适合连续构建、调试和依赖安装。
+- 执行终端命令
+- 安装缺失包
+- 调用设备 API
+- 输出网页或结果卡片
+- 在失败后调整下一步策略
 
-### 3. 产品级记忆系统
+### 3. 复杂任务会“记住上下文”
 
-自定义 Agent 能力主要集中在以下文件：
+这个项目不是每轮都把历史全丢给模型，而是加了记忆和任务状态管理，所以它更适合连续任务，比如：
 
-设计特点：
+- 配环境
+- 写页面
+- 调试命令
+- 安装依赖
+- 多轮修改同一份内容
 
-- 工作记忆 / 短期记忆 / 长期记忆分层存储。
-- 检索时综合考虑语义、时间、访问频率、重要性、成功率。
-- 复杂任务支持状态持久化、步骤依赖、检查点与恢复。
-- 对长期对话做压缩，避免 prompt 无限膨胀。
+## 主要功能
 
-### 4. 内嵌 Termux:API 能力
+- `AI 对话执行`
+  让模型输出结构化动作，再由 App 真实执行。
 
-直接复用了 `termux-api` 源码中的 API 实现，并在 App 进程里桥接：
+- `Termux 终端能力`
+  保留 Termux 作为底座，支持 shell、session 和 bootstrap。
 
-- 电池、剪贴板、短信、联系人、位置、Wi‑Fi、亮度、手电筒等
-- 不在官方 `termux-api` 范围内的部分，还补了直接 Android API 调用
-- 配合动作解析，让模型可以通过统一动作格式调用设备能力
+- `依赖商店`
+  缺什么装什么，尽量减少“命令跑到一半才发现没环境”。
 
-### 5. 动态插件构建与运行
+- `Termux:API 能力整合`
+  直接在应用内桥接电池、剪贴板、联系人、短信、位置、Wi‑Fi 等能力。
 
-插件相关能力主要在：
+- `网页预览`
+  AI 生成的 HTML 或本地产出页面可以直接全屏打开。
 
-- [`PluginBuildPipeline.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/PluginBuildPipeline.kt)
-- [`DynamicPlugin.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/DynamicPlugin.kt)
-- [`PluginBuildService.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/PluginBuildService.kt)
+- `动态插件`
+  在部分场景下，AI 生成的 Java Activity 可以被编译、加载并运行。
 
-流程是：
+- `多会话与记忆`
+  不同任务可分开保存，复杂任务会保留更长的上下文。
 
-1. 让模型只输出一个可编译的 `MainActivity.java`。
-2. 将源码写入临时目录。
-3. 使用 Termux 内的 `javac` / `jar` / `d8` 编译出 dex。
-4. 通过 `DexClassLoader` 动态加载 Activity。
-5. 下次启动时若存在插件，则优先进入插件 Activity。
+## 使用前要知道
 
-这使它不仅是“会执行命令的聊天框”，还是一个“AI 可生成并运行前端壳层”的宿主。
+这个 App 权限很多，而且功能边界比较大。你在使用前应当明确知道下面几件事：
 
-### 6. 依赖商店与网页渲染
+- 它不是只读工具，而是会真实执行命令和调用系统能力
+- 它会申请存储、通知，以及部分设备相关权限
+- 某些能力依赖你自己填写外部模型供应商的 API Key
+- 这是实验性项目，行为上更接近“开发者工具”而不是稳定消费级产品
 
-- [`DepStoreActivity.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/DepStoreActivity.kt)：根据任务需要展示推荐依赖、必装依赖和手动补装入口。
-- [`FullScreenWebActivity.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/FullScreenWebActivity.kt)：把 AI 生成或附件中的 HTML 以内嵌 WebView 全屏展示。
+如果你不能接受这些前提，不建议直接安装使用。
 
-## 模块结构
+## 如何构建
 
-仓库目前是一个标准 Android 多模块工程：
+### 环境要求
 
-- `app`: 主应用，包含 Termux UI 与所有 AI/Agent 扩展
-- `termux-shared`: Termux 共享工具类、设置、日志、shell 封装
-- `terminal-emulator`: 终端模拟核心
-- `terminal-view`: 终端渲染与交互视图
-
-## 与上游 Termux 的主要差异
-
-和上游 `termux-app` 相比，这个 Fork 不是局部打补丁，而是产品定位已经发生变化：
-
-- 默认 launcher 从纯终端入口变成了自定义启动页。
-- 新增 AI 配置、对话 UI、任务循环和执行日志。
-- Manifest 中声明了更广泛的系统权限和设备能力。
-- 内置了动态插件与网页展示链路。
-- 增加了大量和移动端 Agent 相关的状态持久化逻辑。
-
-换句话说，它更接近“以 Termux 为底座的 Android Agent 宿主”。
-
-## 构建说明
-
-### 环境
-
-- Android Gradle Plugin: `7.4.2`
-- Kotlin: `1.9.22`
+- JDK 17
+- Android SDK
+- Android NDK `23.2.8568313`
 - `compileSdkVersion=34`
 - `minSdkVersion=24`
-- `targetSdkVersion=28`
-- NDK: `23.2.8568313`
 
 ### 构建命令
 
@@ -125,46 +103,69 @@
 ./gradlew assembleDebug
 ```
 
-首次编译时会下载 Termux bootstrap 包。`app/build.gradle` 还依赖本地 Termux 环境中的一些工具与仓库内置资产。
+构建成功后，调试包会在标准 Android 构建产物目录下生成。
 
-### 本仓库已做的发布友好修正
+## 首次启动流程
 
-原先 [`gradle.properties`](/Users/xzs/Downloads/termux-app-0.118/gradle.properties) 里硬编码了开发机本地 JDK 路径；这会导致其他机器直接构建失败。现在已改为注释说明，要求使用者在本地 Gradle 配置里自行设置。
+首次启动时，应用通常会做这些事：
 
-## 发布前需要注意
+1. 申请通知权限和存储相关权限
+2. 初始化 Termux bootstrap 环境
+3. 进入聊天执行页
+4. 检查必需依赖是否缺失
+5. 引导你安装必须的 Termux 包
 
-这是一个功能很强、权限也很多的 App，公开发布前建议先做一轮安全与产品边界审查：
+如果你发现第一次打开等待时间较长，这通常是正常现象。
 
-- Manifest 里声明了大量高权限能力，包含短信、联系人、通话、定位、录音、相机、悬浮窗、安装包、写系统设置等。
-- 包名仍为 `com.termux`，与官方生态容易混淆。
-- 仓库里包含 `app/dev_keystore.jks`，它只能用于开发调试，不应用于正式发布签名。
-- AI 供应商调用、设备能力调用、动态代码加载都属于高风险区域，建议补充权限说明和安全策略。
-- 当前工作区存在很多未提交改动，且尚无首个 commit；发布前建议先整理一次提交历史。
+## 使用方式
 
-## 建议的开源描述
+### 基本用法
 
-如果准备公开到 GitHub，可以把这个项目描述为：
+直接在聊天框里输入任务，例如：
 
-> An experimental Android AI agent shell built on top of Termux, combining terminal sessions, on-device task execution, dynamic plugin loading, embedded Termux:API capabilities, and a layered memory system.
+- “帮我检查当前目录里有哪些文件”
+- “安装 Python 并创建一个 hello world”
+- “帮我生成一个简单网页并打开预览”
+- “读取剪贴板内容”
+
+### 文件参与任务
+
+对话页支持附加文件，文件会作为任务上下文的一部分提供给 AI。
+
+### 依赖缺失时
+
+如果任务依赖 Bash、OpenJDK、Python、Git 等环境，应用会尽量自动识别并提示安装。
 
 ## 当前状态
 
-从当前代码看，这个仓库已经不是 demo，而是一个相对完整的实验性产品原型：
+这个项目已经能跑通完整产品链路，但仍然属于实验性原型：
 
-- 有入口页、对话页、抽屉、多会话、日志面板、依赖流转
-- 有模型接入、动作协议、执行器、失败重试
-- 有任务状态、记忆层、对话压缩
-- 有插件构建和运行时加载
-- 有 Web 展示与设备 API 桥接
+- 能用
+- 能构建
+- 能执行真实任务
+- 但不保证所有设备、所有 ROM、所有 API 供应商都稳定
 
-但它仍明显处在“快速演化中的私有 fork”阶段，离对外稳定开源还差：
+如果你拿它做日常主力工具，最好自己具备一定排障能力。
 
-- 更清晰的命名与品牌统一
-- 更干净的提交历史
-- 更严格的权限与安全说明
-- 更完整的构建验证
+## 已知风险
 
-## 相关文档
+- 包名目前仍然是 `com.termux`，容易和原版生态混淆
+- Manifest 中声明了较多高权限能力
+- 仓库包含开发调试签名文件，不适合直接用于正式发布
+- 动态代码生成、设备能力调用和命令执行本身都属于高风险行为
+
+## 给开发者
+
+如果你是来读代码的，重点从这些文件开始：
+
+- [`app/src/main/java/com/termux/app/IDE.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/IDE.kt)
+- [`app/src/main/java/com/termux/app/EnhancedAgentHelper.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/EnhancedAgentHelper.kt)
+- [`app/src/main/java/com/termux/app/WebRenderFragment.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/WebRenderFragment.kt)
+- [`app/src/main/java/com/termux/app/TermuxApiRunner.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/TermuxApiRunner.kt)
+- [`app/src/main/java/com/termux/app/PluginBuildPipeline.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/PluginBuildPipeline.kt)
+- [`app/src/main/java/com/termux/app/MemoryManager.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/MemoryManager.kt)
+
+补充文档：
 
 - [`QUICK_START.md`](/Users/xzs/Downloads/termux-app-0.118/QUICK_START.md)
 - [`MEMORY_SYSTEM_SUMMARY.md`](/Users/xzs/Downloads/termux-app-0.118/MEMORY_SYSTEM_SUMMARY.md)
@@ -173,4 +174,4 @@
 
 ## License
 
-继承上游仓库的开源协议；请同时核对本仓库新增代码、资源和第三方依赖的许可证兼容性。
+请以仓库内现有许可证文件为准，并自行确认新增代码与依赖的许可证兼容性。
