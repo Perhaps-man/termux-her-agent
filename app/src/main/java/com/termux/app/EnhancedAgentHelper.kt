@@ -7,15 +7,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * Agent 辅助类
- *
- * 核心设计：
- * 1. executeAndRemember  — 执行步骤 → 写工作记忆 → 异步 AI 提炼结构化事实到长期/全局记忆
- * 2. handleComplexTask   — ReAct 循环：每步执行后把真实结果反馈给 AI，AI 决定下一步
- * 3. buildEnhancedPrompt — 构建 user 侧 prompt，注入会话记忆 + 全局事实（供主循环使用）
- * 4. MemoryExtractor 异步提炼 — 不阻塞主流程，失败静默忽略
- */
 class EnhancedAgentHelper(private val context: Context) {
 
     private val memoryManager = MemoryManager(context)
@@ -24,25 +15,12 @@ class EnhancedAgentHelper(private val context: Context) {
     private val helperScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val extractor = MemoryExtractor(context, memoryManager, helperScope)
 
-    // ────────────────────────────────────────────────────────────
-    // Prompt 构建
-    // ────────────────────────────────────────────────────────────
-
-    /**
-     * 构建增强提示词，供主执行循环每轮调用。
-     *
-     * 对话历史由调用方（Activity）传入已格式化的字符串，
-     * 避免与 Activity 内的增量压缩逻辑产生双重压缩。
-     * 本方法负责注入相关记忆和任务上下文。
-     */
     suspend fun buildEnhancedPrompt(
         sessionId: String,
         userInput: String,
         dialogHistory: String?,
         stepHistory: String? = null,
-        // 当前步骤查询词：第2轮起传上一步的描述，比一直用 userInput 更精准
         currentStepQuery: String? = null,
-        // 上一步失败的详情，注入在步骤历史前，强制 AI 优先修复
         failureHint: String? = null
     ): String = withContext(Dispatchers.IO) {
         val memoryQuery = currentStepQuery ?: userInput
@@ -52,7 +30,6 @@ class EnhancedAgentHelper(private val context: Context) {
             types = listOf(MemoryType.EXECUTION, MemoryType.SUCCESS, MemoryType.KNOWLEDGE),
             maxResults = 4
         )
-        // Cross-session persistent facts (user preferences, project structure, known errors)
         val globalMemories = memoryManager.retrieveMemoriesSemantic(
             query = memoryQuery,
             sessionId = GLOBAL_SESSION,
@@ -74,13 +51,9 @@ class EnhancedAgentHelper(private val context: Context) {
         } else ""
 
         buildString {
-            // ACTION_TOOLS_PROMPT 由调用方通过 callAIAgent 的 systemPrompt 参数传入，
-            // 不在此处重复注入，避免混入 user 消息导致角色混淆和 token 浪费。
-            // 任务置顶：让模型在读完系统指令后立即明确目标
             append("【当前用户任务】\n")
             append(userInput)
             append("\n\n")
-            // 背景记忆
             if (relevantMemories.isNotEmpty()) {
                 append("【相关经验】\n")
                 relevantMemories.forEach { result ->
@@ -90,22 +63,18 @@ class EnhancedAgentHelper(private val context: Context) {
                 }
                 append("\n")
             }
-            // 对话历史
             if (!dialogHistory.isNullOrBlank()) {
                 append("【历史对话】\n")
                 append(dialogHistory.trim())
                 append("\n\n")
             }
-            // 进行中的任务
             if (taskContext.isNotBlank()) {
                 append(taskContext)
                 append("\n")
             }
-            // 失败提示置于步骤历史前，紧靠生成位置，确保 AI 最优先看到
             if (failureHint != null) {
                 append("⚠️ $failureHint\n\n")
             }
-            // 步骤历史置后：紧靠生成位置，效果最好（避免"迷失在中间"）
             if (!stepHistory.isNullOrBlank()) {
                 append("【本轮已执行步骤（✓=成功 ✗=失败，勿重复✓步骤）】\n")
                 append(stepHistory.trim())
@@ -114,11 +83,6 @@ class EnhancedAgentHelper(private val context: Context) {
         }
     }
 
-    // ────────────────────────────────────────────────────────────
-    // 步骤执行（去掉双写）
-    // ────────────────────────────────────────────────────────────
-
-    // 单步最长执行时间：终端命令超时后返回失败，防止 Agent 永久阻塞
     private val STEP_TIMEOUT_MS = 90_000L
 
     suspend fun executeAndRemember(
@@ -136,8 +100,6 @@ class EnhancedAgentHelper(private val context: Context) {
 
         val success = result.isSuccess
 
-        // content = 描述 + 执行结果，都参与相关性评分的 tokenize
-        // context = 动作行，作为次级检索依据
         val resultSnippet = result.result.take(500).ifBlank { result.terminalLog.take(300) }
         val memoryContent = if (resultSnippet.isNotBlank()) {
             "${step.description}\n结果: $resultSnippet"
@@ -162,29 +124,10 @@ class EnhancedAgentHelper(private val context: Context) {
             )
         )
 
-        // Fire-and-forget: AI extracts structured facts into long-term / global memory
         extractor.extractAsync(sessionId, step, result)
 
         result
     }
-
-    // ────────────────────────────────────────────────────────────
-    // 复杂任务：ReAct 循环（Observe → Think → Act）
-    // ────────────────────────────────────────────────────────────
-
-    /**
-     * ReAct 执行循环：每步执行后把真实结果反馈给 AI，AI 再决定下一步。
-     *
-     * 与旧版"一次性生成静态计划"的本质区别：
-     * - 旧版：AI 在不知道任何执行结果的情况下生成全部步骤，步骤3失败后步骤4仍按失败前的假设运行。
-     * - 新版：每步执行后 AI 看到真实输出，据此决定下一步，具备自适应能力。
-     *
-     * 工程优化：
-     * - 使用 [callAIAgent] 实现 system/user 分离 + 低温度(0.15) + 自动重试
-     * - ACTION_TOOLS_PROMPT 进入 system 角色，不占用 user 消息的有效上下文
-     * - stepHistory 只保留描述+结果摘要（不含原始终端输出），控制 token 膨胀
-     * - 连续解析失败 [MAX_PARSE_FAILURES] 次后退出，防止死循环
-     */
     suspend fun handleComplexTask(
         sessionId: String,
         userInput: String,
@@ -209,16 +152,13 @@ class EnhancedAgentHelper(private val context: Context) {
         val MAX_PARSE_FAILURES = 3
 
         while (stepIdx < MAX_STEPS && parseFailures < MAX_PARSE_FAILURES) {
-            // ── Observe：从实际执行结果提取记忆检索词 ──
             val memQuery = if (stepIdx == 0) userInput
                            else stepHistory.lines().takeLast(4).joinToString(" ")
             val memories = buildMemoryContext(sessionId, memQuery)
 
-            // ── Think：构建用户侧 prompt（系统指令已在 system 角色，此处只放任务+上下文）──
             val userPrompt = buildReActUserPrompt(userInput, memories, stepHistory.toString())
             onProgress(if (stepIdx == 0) "思考第一步..." else "思考第 ${stepIdx + 1} 步...")
 
-            // ── 调用 AI：system/user 分离，低温度确保 JSON 输出稳定 ──
             val reply = callAIAgent(context, buildActionToolsPrompt(context), userPrompt)
             if (reply.startsWith("Error:")) {
                 terminatedByAiError = true
@@ -226,7 +166,6 @@ class EnhancedAgentHelper(private val context: Context) {
                 break
             }
 
-            // ── 解析步骤：parseStepReply 已支持 markdown 代码块剥离 ──
             val step = parseStepReply(reply)
             if (step == null) {
                 parseFailures++
@@ -235,12 +174,10 @@ class EnhancedAgentHelper(private val context: Context) {
             }
             parseFailures = 0
 
-            // ── Act：注册步骤并执行 ──
             taskManager.addStep(task.id, step.description, step.actionLine, step.directContent)
             val (_, taskStep) = taskManager.executeNextStep(task.id) ?: break
             onProgress("${stepIdx + 1}. ${step.description}")
 
-            // message() = 最终汇报，执行后结束
             if (step.isMessage) {
                 executeAndRemember(sessionId, step)
                 taskManager.completeStep(task.id, taskStep.id, "已汇报")
@@ -249,7 +186,6 @@ class EnhancedAgentHelper(private val context: Context) {
 
             val result = executeAndRemember(sessionId, step)
             val mark = if (result.isSuccess) "✓" else "✗"
-            // 失败时给 AI 更多上下文（traceback/错误信息），成功时较短即可
             val snippetLen = if (result.isSuccess) 600 else 1500
             val snippet = result.result.take(snippetLen).ifBlank { result.terminalLog.take(snippetLen / 2) }
             stepHistory.append("${stepIdx + 1}.$mark ${step.description}\n$snippet\n\n")
@@ -282,10 +218,6 @@ class EnhancedAgentHelper(private val context: Context) {
             taskManager.completeTask(task.id) ?: task
         }
     }
-
-    // ────────────────────────────────────────────────────────────
-    // 维护
-    // ────────────────────────────────────────────────────────────
 
     suspend fun performPeriodicMaintenance(sessionId: String) {
         try {

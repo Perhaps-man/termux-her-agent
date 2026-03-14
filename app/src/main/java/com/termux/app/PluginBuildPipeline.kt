@@ -13,15 +13,10 @@ import org.json.JSONObject
 import java.io.File
 import java.util.Properties
 
-/**
- * 构建插件流水线：AI 生成符合标准的 Java 文件列表 → Termux 编译 dex → 生成 properties。
- * 输出到 dynamic_plugin 目录，下次启动 tryStartDynamicPlugin 会加载。
- */
 object PluginBuildPipeline {
 
     private const val TAG = "TestPoint"
 
-    /** AI 只输出一个 Activity 的完整源码，不输出路径、包名等多余字段 */
     private val PLUGIN_BUILD_OUTPUT_FORMAT = """
 【输出格式】你必须只输出一个 JSON 对象，不要输出任何解释、路径、包名说明或 markdown。JSON 仅包含一个字段：
 {
@@ -30,7 +25,6 @@ object PluginBuildPipeline {
 - code：唯一需要的字段，必须是可被 javac 直接编译的合法 Java 代码。
 """.trimIndent()
 
-    /** 测试用模板：界面显示「你好」，对话与更新日志由宿主 overlay 注入 */
     private const val TEMPLATE_PKG = "com.example.plugin"
     private const val TEMPLATE_ENTRY_ACTIVITY = "com.example.plugin.MainActivity"
     private val TEMPLATE_MAIN_JAVA = """
@@ -121,7 +115,6 @@ public class MainActivity extends Activity {
         return sb.toString()
     }
 
-    /** 代码规范：只生成一个 MainActivity，完整可编译，禁止第三方库 */
     private val PLUGIN_BUILD_CODE_RULES = """
 【代码规范】
 1. **只生成一个 Activity**：包名固定为 com.example.plugin，类名为 MainActivity。
@@ -130,7 +123,6 @@ public class MainActivity extends Activity {
 4. **禁止使用 R 资源**：必须用纯代码布局（new TextView、setContentView(root)），禁止 setContentView(R.layout.xxx)、R.drawable.xxx 等。
 """.trimIndent()
 
-    /** 根据用户最近聊天内容提供帮助或关怀的提示词要求 */
     private val PLUGIN_BUILD_PROMPT_USER_CARE = """
 【用户关怀】请根据下方「用户最近聊天内容」，在生成的 Activity 中体现帮助、惊喜或关怀：
 - 界面文案、标题或功能与用户话题相关；

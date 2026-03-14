@@ -170,10 +170,6 @@ fun requestStoragePermissionIfNeeded(activity: Activity) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// 命令预处理：标准化为非交互模式
-// ─────────────────────────────────────────────────────────────
-
 private val RE_PKG_INSTALL = Regex("""((?:^|[|;&\n]\s*)pkg\s+install)(?!\s+-y)""")
 private val RE_APT_INSTALL = Regex("""((?:^|[|;&\n]\s*)apt(?:-get)?\s+install)(?!\s+-y)""")
 private val RE_APT_UPGRADE = Regex("""((?:^|[|;&\n]\s*)apt(?:-get)?\s+(?:upgrade|dist-upgrade|full-upgrade))(?!\s+-y)""")
@@ -200,10 +196,6 @@ private fun normalizeCommand(cmd: String): String {
     return r
 }
 
-// ─────────────────────────────────────────────────────────────
-// HerExecSession：持久 bash 进程 + I/O 管道
-// ─────────────────────────────────────────────────────────────
-
 private const val TERMUX_HOME   = "/data/data/com.termux/files/home"
 private const val TERMUX_PREFIX = "/data/data/com.termux/files/usr"
 private const val TERMUX_BASH   = "$TERMUX_PREFIX/bin/bash"
@@ -214,14 +206,6 @@ private const val EXEC_NO_OUTPUT_TIMEOUT_MS = 60_000L
 /** 全局最大执行时间（ms）兜底 */
 private const val EXEC_MAX_TOTAL_MS = 3_000_000L
 
-/**
- * 持久 bash 进程会话，stdin/stdout 完全受控。
- * 相比 TerminalSession + transcript 轮询：
- *  - 无 scrollback buffer 限制（2000 行）
- *  - 无 \r 覆写导致的进度误判
- *  - 阻塞逐行读取，零 CPU 空转
- *  - stdin 是管道，交互式提示无法挂住进程
- */
 class HerExecSession(val sessionId: String) {
 
     val process: Process = ProcessBuilder(TERMUX_BASH)
@@ -249,13 +233,10 @@ class HerExecSession(val sessionId: String) {
         .start()
 
     val stdin    = process.outputStream.bufferedWriter(Charsets.UTF_8)
-    /** Raw char reader — supports \r-only progress lines (pip/wget) without blocking readLine() */
     val rawInput = java.io.InputStreamReader(process.inputStream, Charsets.UTF_8)
 
-    /** 当前工作目录，每次 exec 后由 sentinel 自动更新 */
     @Volatile var cwd: String = TERMUX_HOME
 
-    /** 进程是否存活，兼容 API 24（isAlive 为 API 26 新增） */
     val isAlive: Boolean
         get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             process.isAlive
@@ -279,10 +260,6 @@ class HerExecSession(val sessionId: String) {
         }
     }
 }
-
-// ─────────────────────────────────────────────────────────────
-// execCommand：Thread + CountDownLatch 方式，无协程版本依赖
-// ─────────────────────────────────────────────────────────────
 
 suspend fun execCommand(
     cmd: String,
@@ -605,7 +582,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
                 handler.postDelayed({ waitForService() }, 50)
                 return
             }
-            // 复用已有 session [1]（首次进入 Termux 时自动创建），避免创建第二个空 session
             val existing = svc.getTermuxSession(0)?.terminalSession
             if (existing != null) {
                 herTerminalSession = existing
@@ -882,7 +858,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
             onExecLogUpdated?.invoke()
         }
 
-        // ========== 权限与 Termux 初始化已在启动页完成，此处仅兜底（如从插件直接进对话） ==========
         requestStoragePermissionIfNeeded(this)
         requestNotificationPermissionIfNeeded(this)
         if (!isTermuxBootstrapped()) {
@@ -1054,10 +1029,8 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
             android.widget.Toast.makeText(this, "已触发自动编译（每${getAutoBuildFreq(this)}条）", android.widget.Toast.LENGTH_SHORT).show()
         }
 
-        // 构造对话级历史：最近若干条「用户/AI」气泡（不关心内部轮次），供 AI 作为上文参考
         currentTaskJob = lifecycleScope.launch {
 
-            // 每步记录完整结果，由 buildStepHistoryText 按时效分层截断注入 prompt
             data class StepRecord(
                 val round: Int,
                 val mark: String,
@@ -1066,11 +1039,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
                 val fullResult: String   // 最多存 500 字，截断由显示层决定
             )
 
-            // 分层截断策略：
-            //   最近 2 步 → 结果保留 250 字（AI 能看清具体错误）
-            //   3~7 步前  → 结果保留 80 字（保留关键数值/路径）
-            //   更早      → 仅标记 + 描述（节省 token）
-            // 整体 tail-truncate 到 4000 字，超限时优先保留最新步骤
             fun buildStepHistoryText(records: List<StepRecord>, currentRound: Int): String? {
                 if (records.isEmpty()) return null
                 val sb = StringBuilder()
@@ -1091,7 +1059,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
                 return if (raw.length > 4000) "…(早期步骤已省略)\n" + raw.takeLast(3800) else raw
             }
 
-            // 失败提示：1~2 次给定向修复提示；3 次以上要求换方向并附上近期失败清单
             fun buildFailureHint(failureLog: List<String>): String? {
                 if (failureLog.isEmpty()) return null
                 return if (failureLog.size >= 3)
@@ -1106,8 +1073,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
             var consecutiveFailures = 0
             val failureLog = mutableListOf<String>()  // 滚动窗口，最多 5 条
             var lastStepDescription: String? = null
-            // 对话历史只在第 0 轮计算一次：任务执行期间步骤泡已由 buildStepHistoryText 覆盖，
-            // 无需每轮重新触发 AI 摘要压缩，避免多余的 callAI 调用。
             var cachedDialogHistory: String? = null
             try {
                 for (round in 0 until maxRounds) {
@@ -1129,7 +1094,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
                         currentStepQuery = lastStepDescription,
                         failureHint = buildFailureHint(failureLog)
                     )
-                    // system = 工具格式规则，user = 任务+记忆+历史，低温度保证 JSON 稳定输出
                     val thinkStart = System.currentTimeMillis()
                     val thinkingTicker = lifecycleScope.launch(Dispatchers.Main) {
                         var sec = 0
@@ -1235,7 +1199,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
                     val statusMark = if (runResult.isSuccess) "✓" else "✗"
                     val actionType = parsed.actionLine.substringBefore("(").take(12)
 
-                    // 存储完整结果，buildStepHistoryText 负责按时效截断
                     stepRecords.add(StepRecord(round, statusMark, parsed.description, actionType,
                         filteredResult.take(500)))
 
@@ -1246,7 +1209,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
                         consecutiveFailures++
                         failureLog.add("步骤${round + 1}「${parsed.description.take(40)}」: ${filteredResult.take(200)}")
                         if (failureLog.size > 5) failureLog.removeAt(0)
-                        // 给 AI 充分机会换方向（3次提示换方向，6次才真正中止）
                         if (consecutiveFailures >= 6) {
                             chatAdapter.updateAiAt(stepIndex, content = parsed.description,
                                 result = "连续失败 6 次，任务中止。最后错误: $filteredResult", running = false)
@@ -1265,8 +1227,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
                         // 弹出依赖卡片后终止本次执行链，交由用户决定是否安装依赖再继续
                         shouldStopAfterDeps = true
                     }
-                    // 只有在本步动作本身是 runJava(...) 时，才插入 Activity 运行卡片，
-                    // 避免之前步骤的插件信息“粘连”到 message()/search 等纯文本结果下面
                     if (parsed.actionLine.startsWith("runJava")) {
                         runResult.pluginLaunchInfo?.let { info ->
                             chatAdapter.addPluginCard(
@@ -1290,7 +1250,6 @@ class SimpleExecutorActivity : AppCompatActivity(), AskForHelpReplyReceiver {
                 scrollChatToEnd()
                 setSendIcon()
                 currentTaskJob = null
-                // 终止并清理 AI 创建的非默认终端会话，防止 TerminalSession 泄漏
                 synchronized(herExecSessions) {
                     val toRemove = herExecSessions.entries.filter { it.key != "default" }
                     toRemove.forEach { (_, session) ->
@@ -1549,7 +1508,6 @@ class ExecLogAdapter(private val entries: List<ExecLogEntry>) :
 
     override fun getItemCount() = entries.size
 }
-
 
 
 

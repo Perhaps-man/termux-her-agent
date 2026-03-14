@@ -183,7 +183,6 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
     private static final String LOG_TAG = "TermuxActivity";
     public static volatile TermuxActivity lastInstance = null;
     private static final String HER_TERMUX_READY = "HER_TERMUX_READY";
-    //hahahaha
     private static final AtomicBoolean sHerReadySent = new AtomicBoolean(false);
 
     private void notifyHerReadyOnce() {
