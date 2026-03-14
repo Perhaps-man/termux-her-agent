@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- 终端输出块：深色背景，圆角，区别于对话气泡 -->
+    <solid android:color="#1A1B26" />
+    <corners android:radius="10dp" />
+</shape>

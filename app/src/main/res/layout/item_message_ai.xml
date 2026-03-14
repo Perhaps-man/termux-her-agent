@@ -1,0 +1,16 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp"
+    android:orientation="horizontal"
+    android:gravity="start">
+
+    <!-- 气泡容器：背景仍用你的 bg_bubble_ai -->
+    <LinearLayout
+        android:id="@+id/container_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_bubble_ai"
+        android:orientation="vertical"
+        android:padding="10dp" />
+</LinearLayout>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 允许对特定服务端的明文 HTTP 访问 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">59.110.34.32</domain>
+        <domain includeSubdomains="true">60.205.5.9</domain>
+        <domain includeSubdomains="true">www.aibox.asia</domain>
+    </domain-config>
+
+    <!-- 允许 WebView/应用对本机循环地址进行明文 HTTP 访问（用于 http://127.0.0.1:8765） -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>

@@ -1,0 +1,38 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="6dp">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:scaleType="centerInside" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="6dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textSize="13sp"
+            android:textColor="#ffffff"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- 选中遮罩 -->
+    <View
+        android:id="@+id/selected_mask"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#6600A0FF"
+        android:visibility="gone"/>
+</FrameLayout>

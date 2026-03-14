@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="Theme.Termux" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:colorPrimary">#FF000000</item>
+        <item name="android:windowBackground">@android:color/black</item>
+
+        <!-- Seen in buttons on left drawer: -->
+        <item name="android:colorAccent">#212121</item>
+        <item name="android:alertDialogTheme">@style/TermuxAlertDialogStyle</item>
+        <!-- Avoid action mode toolbar pushing down terminal content when
+             selecting text on pre-6.0 (non-floating toolbar). -->
+        <item name="android:windowActionModeOverlay">true</item>
+
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+
+        <!-- https://developer.android.com/training/tv/start/start.html#transition-color -->
+        <item name="android:windowAllowReturnTransitionOverlap">true</item>
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+    </style>
+
+
+    <!-- See https://developer.android.com/training/material/theme.html for how to customize the Material theme. -->
+    <!-- NOTE: Cannot use "Light." since it hides the terminal scrollbar on the default black background. -->
+    <style name="Theme.Termux.Black" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:colorPrimary">#FF000000</item>
+        <item name="android:windowBackground">@android:color/black</item>
+
+        <!-- Seen in buttons on left drawer: -->
+        <item name="android:colorAccent">#FDFDFD</item>
+        <!-- Avoid action mode toolbar pushing down terminal content when
+             selecting text on pre-6.0 (non-floating toolbar). -->
+        <item name="android:windowActionModeOverlay">true</item>
+
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+
+        <!-- https://developer.android.com/training/tv/start/start.html#transition-color -->
+        <item name="android:windowAllowReturnTransitionOverlap">true</item>
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+    </style>
+
+
+    <style name="TermuxAlertDialogStyle" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+        <!-- Seen in buttons on alert dialog: -->
+        <item name="android:colorAccent">#212121</item>
+    </style>
+
+
+
+
+
+
+
+    <style name="MyLightPopupMenu" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="NoButton" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@android:color/transparent</item> <!-- 不再自动用 colorPrimary -->
+        <item name="android:backgroundTint">@android:color/transparent</item> <!-- 有些版本用这一项才生效 -->
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColor">#000000</item> <!-- 可选，默认文字颜色 -->
+    </style>
+    <style name="PopupTransparent" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowCloseOnTouchOutside">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+    <style name="Theme.Her.Transparent" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+    <style name="Row">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:background">@drawable/bg_section_row</item>
+        <item name="android:layout_marginTop">10dp</item>
+    </style>
+
+    <style name="Section">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_section</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:layout_marginTop">12dp</item>
+    </style>
+
+    <style name="RowIcon">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:tint">#bb000000</item>
+        <item name="android:layout_marginEnd">10dp</item>
+    </style>
+
+    <style name="RowLabel">
+        <item name="android:textColor">#bb000000</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="RowInput">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">#bb000000</item>
+        <item name="android:textColorHint">#bb000000</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="Chip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minWidth">72dp</item>
+        <item name="android:textColor">#bb000000</item>
+        <item name="android:background">@drawable/bg_chip</item>
+    </style>
+
+    <style name="Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">#bb000000</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+    </style>
+    <style name="Theme.AIBox" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <!-- ✅ 禁用系统自带的 ActionBar -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <!-- 关键：强制使用亮色 -->
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorPrimary">#003366</item>
+        <item name="buttonStyle">@style/NoButton</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#2196F3</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:windowBackground">#FFFFFF</item>
+        <!-- 边到边：状态栏透明，内容延伸到刘海/水滴屏 -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+</resources>

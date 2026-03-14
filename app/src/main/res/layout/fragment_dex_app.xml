@@ -1,0 +1,49 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- 顶部操作栏（默认隐藏） -->
+    <LinearLayout
+        android:id="@+id/actionBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:visibility="gone"
+        android:background="#252525">
+
+        <android.widget.Button
+            android:id="@+id/btnSelectAll"
+            android:background="@drawable/rounded_text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="全选"/>
+
+        <android.widget.Button
+            android:id="@+id/btnDelete"
+            android:background="@drawable/rounded_text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="删除"
+            android:layout_marginStart="12dp"/>
+
+        <android.widget.Button
+            android:id="@+id/btnCancel"
+            android:background="@drawable/rounded_text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="取消"
+            android:layout_marginStart="12dp"/>
+    </LinearLayout>
+
+    <!-- 内容区 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="12dp"/>
+</LinearLayout>

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(rm:*)",
+      "Bash(./gradlew :app:compileDebugKotlin:*)",
+      "Bash(sed -n '42,60p' \"C:/Users/xuzis/AndroidProjects/termux-app-0.118/app/src/main/java/com/termux/app/WebRenderFragment.kt\"\nsed -n '61,170p' \"C:/Users/xuzis/AndroidProjects/termux-app-0.118/app/src/main/java/com/termux/app/WebRenderFragment.kt\"\nsed -n '820,900p' \"C:/Users/xuzis/AndroidProjects/termux-app-0.118/app/src/main/java/com/termux/app/WebRenderFragment.kt\")",
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(do:*)",
+      "Bash(cp:*)"
+    ]
+  }
+}

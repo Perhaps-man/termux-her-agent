@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="280dp"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:clipChildren="false">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="12dp"
+        android:text="历史会话"
+        android:textSize="18sp"
+        android:textColor="#111827"
+        android:textStyle="bold" />
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sessionList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingTop="4dp"
+        android:paddingBottom="16dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="16dp"
+        android:paddingBottom="32dp"
+        android:gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageButton
+            android:id="@+id/btnNewSession"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:elevation="2dp"
+            android:background="@drawable/bg_drawer_new_session_fab"
+            android:contentDescription="新建会话"
+            android:src="@drawable/baseline_add_24"
+            android:scaleType="centerInside"
+            android:padding="12dp"
+            android:tint="#374151" />
+    </FrameLayout>
+</LinearLayout>

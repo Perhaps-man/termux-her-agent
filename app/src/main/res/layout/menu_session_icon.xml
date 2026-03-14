@@ -1,0 +1,10 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="50dp" android:layout_height="50dp"
+    android:paddingEnd="20dp">
+    <ImageButton
+        android:id="@+id/icon_delete"
+        android:layout_width="30dp" android:layout_height="30dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_delete"
+        android:layout_gravity="center_vertical"/>
+</FrameLayout>

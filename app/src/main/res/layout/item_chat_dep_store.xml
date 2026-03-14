@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="6dp">
+
+    <LinearLayout
+        android:id="@+id/dep_store_card_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="45dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_result_card"
+        android:paddingStart="14dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:id="@+id/tv_dep_store_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="需要安装以下 Termux 包"
+            android:textColor="#0F172A"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_dep_store_packages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#64748B"
+            android:textSize="13sp"
+            android:maxLines="3"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tv_dep_store_action"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="点击前往依赖商店 →"
+            android:textColor="#6366F1"
+            android:textSize="13sp" />
+    </LinearLayout>
+</FrameLayout>

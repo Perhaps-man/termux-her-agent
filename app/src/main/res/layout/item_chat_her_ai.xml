@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="16dp"
+    android:paddingEnd="52dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="top">
+
+        <!-- 左列：头像 + 状态指示（分两行，避免遮挡） -->
+        <LinearLayout
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <!-- 深色圆形头像 -->
+            <FrameLayout
+                android:layout_width="34dp"
+                android:layout_height="34dp">
+
+                <View
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_ai_avatar" />
+
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@drawable/ic_robot"
+                    android:scaleType="center"
+                    android:padding="8dp" />
+            </FrameLayout>
+
+            <!-- 状态指示：头像正下方，独立行，有 5dp 间距 -->
+            <FrameLayout
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginTop="5dp"
+                android:gravity="center">
+
+                <ProgressBar
+                    android:id="@+id/ai_status_loading"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="#6366F1"
+                    android:visibility="gone" />
+
+                <View
+                    android:id="@+id/ai_status_done"
+                    android:layout_width="9dp"
+                    android:layout_height="9dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/green_dot"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <!-- 消息内容列 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="11dp"
+            android:orientation="vertical">
+
+            <!-- 主文字：无气泡背景 -->
+            <TextView
+                android:id="@+id/tv_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#111827"
+                android:textSize="15sp"
+                android:lineSpacingMultiplier="1.45"
+                android:letterSpacing="0.01" />
+
+            <!-- 终端/进度输出块 -->
+            <TextView
+                android:id="@+id/tv_progress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_progress_block"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:textColor="#8E9BB3"
+                android:textSize="11.5sp"
+                android:fontFamily="monospace"
+                android:lineSpacingMultiplier="1.35"
+                android:visibility="gone" />
+
+            <!-- 执行结果卡片 + 复制按钮（复制文字放在卡片内部） -->
+            <LinearLayout
+                android:id="@+id/layout_result_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="top"
+                android:background="@drawable/bg_result_card"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tv_result"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="#475569"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:lineSpacingMultiplier="1.3"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tv_result_copy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:text="复制"
+                    android:textColor="#6366F1"
+                    android:textSize="11sp"
+                    android:background="@android:color/transparent"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- 展开 / 收起提示 -->
+            <TextView
+                android:id="@+id/tv_result_expand_hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:paddingBottom="2dp"
+                android:textColor="#6366F1"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

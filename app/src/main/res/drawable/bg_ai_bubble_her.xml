@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- AI 气泡：极浅灰底色，去掉描边，圆角收紧到 16dp -->
+    <solid android:color="#F2F3F5" />
+    <corners android:radius="16dp" />
+</shape>

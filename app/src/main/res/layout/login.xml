@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="#F2F2F2">
+
+    <!-- App Logo -->
+    <ImageView
+        android:id="@+id/logoImage"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:src="@mipmap/ic_launcher_foreground"
+        android:contentDescription="App Logo"
+        android:layout_marginBottom="24dp" />
+
+    <!-- 标题 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="登录账户"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#111827"
+        android:layout_marginBottom="32dp" />
+
+    <!-- 用户名输入框 -->
+    <EditText
+        android:id="@+id/etUsername"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="用户名"
+        android:textColorHint="#555555"
+        android:textColor="#111827"
+        android:inputType="textPersonName"
+        android:background="@drawable/rounded_text22"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 密码输入框 -->
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="密码"
+        android:textColorHint="#555555"
+        android:textColor="#111827"
+        android:inputType="textPassword"
+        android:background="@drawable/rounded_text22"
+        android:padding="12dp"
+        android:layout_marginBottom="24dp" />
+
+    <!-- 登录按钮 -->
+
+    <!-- 注册提示 -->
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/rounded_button"
+        android:text="登录"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tvRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="没有账号？立即注册"
+        android:textColor="#2563EB"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout>

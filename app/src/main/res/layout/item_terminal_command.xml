@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_result_card">
+
+    <!-- 命令头部行：状态点 + 命令文字 + 时间戳 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <!-- 状态圆点：绿=成功，红=失败 -->
+        <View
+            android:id="@+id/statusDot"
+            android:layout_width="7dp"
+            android:layout_height="7dp"
+            android:background="@drawable/green_dot"
+            android:layout_marginEnd="8dp" />
+
+        <!-- 命令文字 -->
+        <TextView
+            android:id="@+id/tv_command"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textSize="12.5sp"
+            android:textColor="#111827"
+            android:textStyle="bold"
+            android:maxLines="3"
+            android:ellipsize="end" />
+
+        <!-- 执行时间戳 -->
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textSize="10.5sp"
+            android:textColor="#9CA3AF"
+            android:fontFamily="monospace" />
+
+    </LinearLayout>
+
+    <!-- 输出块：深色代码风格，有输出才显示 -->
+    <TextView
+        android:id="@+id/tv_output"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/bg_progress_block"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:textColor="#8E9BB3"
+        android:textSize="11sp"
+        android:fontFamily="monospace"
+        android:lineSpacingMultiplier="1.35"
+        android:visibility="gone" />
+
+</LinearLayout>

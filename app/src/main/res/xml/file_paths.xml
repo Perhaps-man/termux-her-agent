@@ -1,0 +1,18 @@
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="images" path="." />
+    <files-path name="files" path="." />
+    <!-- 支持 /Android/data/包名/files/ 下的所有文件 -->
+    <external-files-path
+        name="external_files"
+        path="." />
+
+    <!-- 支持 app 的内部目录（filesDir） -->
+    <files-path
+        name="internal_files"
+        path="." />
+
+    <!-- 支持 cache 目录 -->
+    <cache-path
+        name="cache_files"
+        path="." />
+</paths>

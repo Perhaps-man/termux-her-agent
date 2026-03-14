@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- 用户气泡：浅蓝灰，与无气泡 AI 消息形成层次，不刺眼 -->
+    <solid android:color="#E8EBF0" />
+    <corners android:radius="16dp" />
+</shape>

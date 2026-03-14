@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/her_panel_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    card_view:cardCornerRadius="10dp"
+    card_view:cardUseCompatPadding="true"
+
+    android:foreground="@null">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#aa1e1e1e"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- 顶部：关闭按钮 + 占位撑满 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="start|center_vertical">
+            <View
+                android:id = "@+id/drag_bar"
+                android:background="@android:color/transparent"
+                android:layout_width="0dp"
+                android:layout_height="20dp"
+                android:layout_weight="1"/>
+            <ImageButton
+                android:id="@+id/btn_close"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_close"
+                android:tint="#252525"
+                android:contentDescription="关闭" />
+
+        </LinearLayout>
+
+        <!-- 底部：输入框 + 发送按钮在一行 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <EditText
+                android:id="@+id/et_input"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="@drawable/rounded_text22"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:textColor="#000000"
+                android:hint="请输入指令"
+                android:textColorHint="#000000"
+                android:textSize="13sp"
+                android:maxLines="3"
+                android:inputType="textMultiLine" />
+
+            <ImageButton
+                android:id="@+id/btn_send"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="10dp"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_arrow2"
+                android:scaleType="centerInside" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

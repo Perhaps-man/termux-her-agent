@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 让它永远可见（优先级最高，0 最小 → 优先） -->
+    <item
+        android:id="@+id/add"
+        android:icon="@drawable/ic_note"
+        android:title="未选择模型"
+        android:orderInCategory="0"
+        app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/menu_terminal"
+        android:title=""
+        android:orderInCategory="2"
+        app:showAsAction="ifRoom"
+        app:actionLayout="@layout/menu_terminal" />
+
+    <!-- 启动 AI：如果有位置就显示，没位置自动让位 -->
+    <item
+        android:id="@+id/menu_start_ai"
+        android:title=""
+        android:orderInCategory="1"
+        app:showAsAction="ifRoom"
+        app:actionLayout="@layout/menu_start_ai" />
+</menu>

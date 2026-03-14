@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 四周留白，使立方体完整显示、不被裁剪 -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_launcher_cube"
+    android:insetLeft="150dp"
+    android:insetTop="150dp"
+    android:insetRight="150dp"
+    android:insetBottom="150dp" />
