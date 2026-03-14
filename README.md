@@ -2,7 +2,7 @@
 
 一个基于 `termux-app` 深度改造的 Android 项目：它保留了 Termux 的终端与会话能力，同时把 AI 对话执行器、动态插件、依赖商店、网页渲染、设备能力调用和分层记忆系统整合进了同一个 App。
 
-这不是官方 Termux 仓库，而是一个面向“手机端 Agent / AI 助手”场景的 Fork。当前代码里应用名相关字符串同时出现了 `Her` 和 `AIBox`，包名仍然是 `com.termux`。
+这不是官方 Termux 仓库，而是一个面向“手机端 Agent / AI 助手”场景的 Fork。
 
 ## 项目定位
 
@@ -49,12 +49,6 @@
 
 自定义 Agent 能力主要集中在以下文件：
 
-- [`MemoryManager.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/MemoryManager.kt)
-- [`TaskStateManager.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/TaskStateManager.kt)
-- [`MemoryCompressor.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/MemoryCompressor.kt)
-- [`MemoryExtractor.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/MemoryExtractor.kt)
-- [`EnhancedAgentHelper.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/EnhancedAgentHelper.kt)
-
 设计特点：
 
 - 工作记忆 / 短期记忆 / 长期记忆分层存储。
@@ -64,11 +58,11 @@
 
 ### 4. 内嵌 Termux:API 能力
 
-[`TermuxApiRunner.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/TermuxApiRunner.kt) 直接复用了 `termux-api` 源码中的 API 实现，并在 App 进程里桥接：
+直接复用了 `termux-api` 源码中的 API 实现，并在 App 进程里桥接：
 
 - 电池、剪贴板、短信、联系人、位置、Wi‑Fi、亮度、手电筒等
 - 不在官方 `termux-api` 范围内的部分，还补了直接 Android API 调用
-- 配合 [`WebRenderFragment.kt`](/Users/xzs/Downloads/termux-app-0.118/app/src/main/java/com/termux/app/WebRenderFragment.kt) 的动作解析，让模型可以通过统一动作格式调用设备能力
+- 配合动作解析，让模型可以通过统一动作格式调用设备能力
 
 ### 5. 动态插件构建与运行
 
