@@ -3,6 +3,7 @@ package com.termux.app
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -176,6 +177,24 @@ abstract class HerToolbarActivity : AppCompatActivity() {
             textSize = 14f
         }
         inner.addView(searchKeyInput, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * density).toInt() })
+        val deepSeekLinkBtn = Button(this).apply {
+            text = "去 DeepSeek 申请 Embedding Key"
+            setTextColor(darkText)
+            setAllCaps(false)
+            setOnClickListener {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://platform.deepseek.com/api_keys")))
+            }
+        }
+        inner.addView(deepSeekLinkBtn, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * density).toInt() })
+        val metasoLinkBtn = Button(this).apply {
+            text = "去秘塔申请 Search API Key"
+            setTextColor(darkText)
+            setAllCaps(false)
+            setOnClickListener {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://metaso.cn/search-api/playground")))
+            }
+        }
+        inner.addView(metasoLinkBtn, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * density).toInt() })
         val saveAiBtn = Button(this).apply {
             text = "保存 AI 配置"
             setTextColor(darkText)

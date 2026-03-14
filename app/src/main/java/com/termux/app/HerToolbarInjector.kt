@@ -1,8 +1,10 @@
 package com.termux.app
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -162,6 +164,22 @@ object HerToolbarInjector {
             textSize = 14f
         }
         inner.addView(searchKeyInput, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * density).toInt() })
+        inner.addView(Button(activity).apply {
+            text = "去 DeepSeek 申请 Embedding Key"
+            setTextColor(darkText)
+            setAllCaps(false)
+            setOnClickListener {
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://platform.deepseek.com/api_keys")))
+            }
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * density).toInt() })
+        inner.addView(Button(activity).apply {
+            text = "去秘塔申请 Search API Key"
+            setTextColor(darkText)
+            setAllCaps(false)
+            setOnClickListener {
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://metaso.cn/search-api/playground")))
+            }
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * density).toInt() })
         inner.addView(Button(activity).apply {
             text = "保存 AI 配置"
             setTextColor(darkText)
