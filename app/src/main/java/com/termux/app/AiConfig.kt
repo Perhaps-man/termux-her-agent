@@ -7,6 +7,7 @@ private const val KEY_PROVIDER = "provider"
 private const val KEY_API_KEY = "api_key"
 private const val KEY_MODEL = "model"
 private const val KEY_EMBED_API_KEY = "embed_api_key"
+private const val KEY_SEARCH_API_KEY = "search_api_key"
 
 /** 供应商标识，与抽屉 Spinner 顺序对应 */
 const val PROVIDER_CLOSEAI = "closeai"
@@ -63,6 +64,15 @@ fun getEmbedApiKey(context: Context): String =
 fun setEmbedApiKey(context: Context, key: String) {
     context.getSharedPreferences(PREFS_AI, Context.MODE_PRIVATE)
         .edit().putString(KEY_EMBED_API_KEY, key.trim()).apply()
+}
+
+fun getSearchApiKey(context: Context): String =
+    context.getSharedPreferences(PREFS_AI, Context.MODE_PRIVATE)
+        .getString(KEY_SEARCH_API_KEY, "") ?: ""
+
+fun setSearchApiKey(context: Context, key: String) {
+    context.getSharedPreferences(PREFS_AI, Context.MODE_PRIVATE)
+        .edit().putString(KEY_SEARCH_API_KEY, key.trim()).apply()
 }
 
 fun defaultModelForProvider(provider: String): String = when (provider) {

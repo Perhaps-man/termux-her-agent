@@ -358,7 +358,6 @@ private suspend fun executeAiRequest(request: Request, parse: (String) -> String
             }
         })
     }
-/** 秘塔 AI 搜索 API Key，可在设置中覆盖；请勿将密钥提交到版本控制 */
 private const val METASO_BASE_URL = "https://metaso.cn"
 
 /** 搜索每日次数限制与持久化 key */
@@ -372,6 +371,11 @@ class HerApi(private val context: Context) {
 
     /** 秘塔 AI 搜索：每日最多 10 次，调用 chat/completions 接口 */
     suspend fun search(query: String): String = withContext(Dispatchers.IO) {
+        val searchApiKey = getSearchApiKey(context)
+        if (searchApiKey.isBlank()) {
+            return@withContext "搜索未配置：请在设置里填写 Search API Key"
+        }
+
         val prefs = context.getSharedPreferences(PREFS_SEARCH_LIMIT, Context.MODE_PRIVATE)
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val savedDate = prefs.getString(KEY_SEARCH_DATE, "")
@@ -404,7 +408,7 @@ class HerApi(private val context: Context) {
 
         val request = Request.Builder()
             .url("$METASO_BASE_URL/api/v1/chat/completions")
-            .addHeader("Authorization", "Bearer $METASO_API_KEY")
+            .addHeader("Authorization", "Bearer $searchApiKey")
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
             .post(RequestBody.create("application/json".toMediaTypeOrNull(), body.toString()))

@@ -167,6 +167,15 @@ abstract class HerToolbarActivity : AppCompatActivity() {
             textSize = 14f
         }
         inner.addView(embedKeyInput, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * density).toInt() })
+        val searchKeyInput = EditText(this).apply {
+            hint = "Search API Key（可选）"
+            setText(getSearchApiKey(this@HerToolbarActivity))
+            setTextColor(darkText)
+            setHintTextColor(hintText)
+            setPadding((12 * density).toInt(), (10 * density).toInt(), (12 * density).toInt(), (10 * density).toInt())
+            textSize = 14f
+        }
+        inner.addView(searchKeyInput, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * density).toInt() })
         val saveAiBtn = Button(this).apply {
             text = "保存 AI 配置"
             setTextColor(darkText)
@@ -182,6 +191,7 @@ abstract class HerToolbarActivity : AppCompatActivity() {
                 setAiApiKey(this@HerToolbarActivity, apiKeyInput.text.toString().trim())
                 setAiModel(this@HerToolbarActivity, modelInput.text.toString().trim())
                 setEmbedApiKey(this@HerToolbarActivity, embedKey)
+                setSearchApiKey(this@HerToolbarActivity, searchKeyInput.text.toString().trim())
                 Toast.makeText(this@HerToolbarActivity, "已保存", Toast.LENGTH_SHORT).show()
             }
         }
